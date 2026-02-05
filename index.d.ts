@@ -41,9 +41,18 @@ export interface RateLimiterOptions {
 
   /**
    * 存储后端
+   * - Store 实例：自定义或内置的存储后端（MemoryStore、RedisStore）
+   * - 'memory'：使用默认内存存储
    * @default 'memory'
+   * @example
+   * // 使用内存存储
+   * store: 'memory'
+   *
+   * @example
+   * // 使用 Redis 存储
+   * store: new RedisStore({ client: redisClient })
    */
-  store?: Store | 'memory' | string;
+  store?: Store | 'memory';
 
   /**
    * 从请求对象生成限流键的函数
@@ -134,7 +143,7 @@ export interface Store {
 }
 
 /**
- * Redis 客户端接口（兼容 ioredis）
+ * Redis 客户端接口（兼容 ioredis 和 node-redis）
  */
 export interface RedisClient {
   get(key: string): Promise<string | null>;
@@ -145,6 +154,7 @@ export interface RedisClient {
   del(...keys: string[]): Promise<number>;
   keys(pattern: string): Promise<string[]>;
   expire(key: string, seconds: number): Promise<number>;
+  ttl?(key: string): Promise<number>;
   zadd(key: string, score: number, member: string): Promise<number>;
   zcard(key: string): Promise<number>;
   zremrangebyscore(key: string, min: string | number, max: string | number): Promise<number>;
@@ -157,7 +167,7 @@ export interface RedisClient {
  */
 export interface RedisStoreOptions {
   /**
-   * Redis 客户端实例（ioredis）
+   * Redis 客户端实例（ioredis 或兼容客户端）
    */
   client: RedisClient;
 
