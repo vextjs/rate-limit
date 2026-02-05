@@ -45,12 +45,19 @@ export interface RateLimiterOptions {
    * - 'memory'：使用默认内存存储
    * @default 'memory'
    * @example
+   * ```typescript
    * // 使用内存存储
    * store: 'memory'
    *
-   * @example
    * // 使用 Redis 存储
-   * store: new RedisStore({ client: redisClient })
+   * const redis = new Redis();
+   * store: new RedisStore({ client: redis })
+   *
+   * // 条件使用（Egg.js 风格）
+   * store: ctx.app.redis
+   *   ? new RedisStore({ client: ctx.app.redis })
+   *   : 'memory'
+   * ```
    */
   store?: Store | 'memory';
 
@@ -143,12 +150,15 @@ export interface Store {
 }
 
 /**
- * Redis 客户端接口（兼容 ioredis 和 node-redis）
+ * Redis 客户端接口（兼容 ioredis、node-redis 等）
+ *
+ * 此接口定义了最小必需的 Redis 方法集。
+ * 如果你的 Redis 客户端是 any 类型，可以直接传入。
  */
 export interface RedisClient {
   get(key: string): Promise<string | null>;
-  set(key: string, value: string): Promise<string>;
-  setex(key: string, seconds: number, value: string): Promise<string>;
+  set(key: string, value: string): Promise<string | any>;
+  setex(key: string, seconds: number, value: string): Promise<string | any>;
   incr(key: string): Promise<number>;
   decr(key: string): Promise<number>;
   del(...keys: string[]): Promise<number>;
@@ -168,8 +178,9 @@ export interface RedisClient {
 export interface RedisStoreOptions {
   /**
    * Redis 客户端实例（ioredis 或兼容客户端）
+   * 支持任何实现了基本 Redis 方法的客户端
    */
-  client: RedisClient;
+  client: RedisClient | any;
 
   /**
    * 键前缀
